@@ -34,7 +34,7 @@ its full usage.
 
 
 
-> 💡 Click a command below to unfold its arguments. All these commands are tested working with `watch <cmd>` live monitoring: e.g. `watch myjobs --start`. 
+> 💡 Click a command below to unfold its arguments. Recommend to use these commands with `watch <cmd>` live monitoring: e.g. `watch myjobs --start`. 
 
 <br>
 
