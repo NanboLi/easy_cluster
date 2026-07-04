@@ -1,4 +1,14 @@
-# easy_cluster
+<div align="center">
+
+# 🚀 easy_cluster
+
+**Useful shell wrappers around common SLURM commands.**
+
+![Bash](https://img.shields.io/badge/Bash-4EAA25?logo=gnubash&logoColor=white)
+&nbsp;![Scheduler](https://img.shields.io/badge/scheduler-SLURM-2088FF)
+&nbsp;![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+</div>
 
 A small collection of shell wrappers around common SLURM commands, making it
 easier to see who is using the cluster, how GPUs are allocated, and to manage
@@ -8,23 +18,45 @@ All scripts are plain `bash` and rely on the standard SLURM CLI (`squeue`,
 `sinfo`, `scancel`, `sprio`). Run any script with `-h` (where supported) to see
 its full usage.
 
-## Commands (Actively Updating)
+---
 
-| Command | What it does |
-| --- | --- |
-| [`whoson`](whoson) | Summarise running/pending jobs per user, optionally with GPU and node counts. |
-| [`gpu-usage`](gpu-usage) | Show aggregate GPU usage across the cluster (or selected nodes). |
-| [`gpu-usage-by-node`](gpu-usage-by-node) | Show GPU usage broken down per node. |
-| [`free-gpus`](free-gpus) | List nodes that currently have free GPUs. |
-| [`myjobs`](myjobs) | Show your own jobs in the queue. |
-| [`killmyjobs`](killmyjobs) | Cancel your jobs, with options to filter and exclude. |
+## 🧰 Commands &nbsp;<sub><i>(actively updating)</i></sub>
 
-Click a command name to expand its arguments.
+|  | Command | What it does |
+| :-: | --- | --- |
+| 📋 | [`myjobs`](myjobs) | Show your own jobs in the queue. |
+| 👥 | [`whoson`](whoson) | Summarise running/pending jobs per user, optionally with GPU and node counts. |
+| 📊 | [`gpu-usage`](gpu-usage) | Show aggregate GPU usage across the cluster (or selected nodes). |
+| 🖥️ | [`gpu-usage-by-node`](gpu-usage-by-node) | Show GPU usage broken down per node. |
+| 🟢 | [`free-gpus`](free-gpus) | List nodes that currently have free GPUs. |
+| 🔪 | [`killmyjobs`](killmyjobs) | Cancel your jobs, with options to filter and exclude. |
 
-<details>
-<summary><b><code>whoson</code></b> — Lists every user with queued or running jobs, showing a <code>running/pending/total</code> breakdown of their job count.</summary>
+> 💡 Click a command below to unfold its arguments.
 
 <br>
+
+<details>
+<summary>📋 &nbsp;<kbd><b>myjobs</b></kbd> &nbsp;— Shows your own jobs in the queue (a thin wrapper around <code>squeue -u $USER</code>).</summary>
+
+<br>
+
+**Arguments**
+
+Any arguments are passed straight through to `squeue`, so every `squeue` option
+works. Some handy ones:
+
+- `--start` — show the estimated start time for your pending jobs.
+- `-t <state>` — filter by job state, e.g. `-t RUNNING` or `-t PENDING`.
+- `-i <seconds>` — refresh the listing every N seconds (live view).
+
+</details>
+
+<details>
+<summary>👥 &nbsp;<kbd><b>whoson</b></kbd> &nbsp;— Lists every user with queued or running jobs, showing a <code>running/pending/total</code> breakdown of their job count.</summary>
+
+<br>
+
+**Arguments**
 
 - `-g` — additionally report, per user, the number of **nodes** and **GPUs**
   used (each as `running/pending/total`).
@@ -36,9 +68,11 @@ requested (`--gpus`, `--gpus-per-node`, `--gpus-per-task`, `--gres`).
 </details>
 
 <details>
-<summary><b><code>gpu-usage</code></b> — Prints aggregate GPU usage as <code>in_use</code>, <code>usable</code>, <code>total</code>, and <code>free</code> counts.</summary>
+<summary>📊 &nbsp;<kbd><b>gpu-usage</b></kbd> &nbsp;— Prints aggregate GPU usage as <code>in_use</code>, <code>usable</code>, <code>total</code>, and <code>free</code> counts.</summary>
 
 <br>
+
+**Arguments**
 
 - `-n <nodelist>` — restrict to specific nodes; accepts a comma-separated list
   (`charles01,charles03`) or SLURM's summarised form (`charles[01-06,11-19]`).
@@ -50,9 +84,11 @@ The number of free GPUs is `usable - in_use`.
 </details>
 
 <details>
-<summary><b><code>gpu-usage-by-node</code></b> — Same GPU breakdown as <code>gpu-usage</code>, but with one row per node (prefixed with a timestamp and node name).</summary>
+<summary>🖥️ &nbsp;<kbd><b>gpu-usage-by-node</b></kbd> &nbsp;— Same GPU breakdown as <code>gpu-usage</code>, but with one row per node (prefixed with a timestamp and node name).</summary>
 
 <br>
+
+**Arguments**
 
 - `-n <nodelist>` — restrict to specific nodes (same format as `gpu-usage`).
 - `-p` — output raw CSV instead of the pretty table (the table is the default).
@@ -61,7 +97,7 @@ The number of free GPUs is `usable - in_use`.
 </details>
 
 <details>
-<summary><b><code>free-gpus</code></b> — Lists each node that currently has at least one free GPU, with how many GPUs are free on it.</summary>
+<summary>🟢 &nbsp;<kbd><b>free-gpus</b></kbd> &nbsp;— Lists each node that currently has at least one free GPU, with how many GPUs are free on it.</summary>
 
 <br>
 
@@ -71,19 +107,11 @@ you the cluster is full and prints the current priority queue (`sprio -l`).
 </details>
 
 <details>
-<summary><b><code>myjobs</code></b> — Shows your own jobs in the queue (a thin wrapper around <code>squeue -u $USER</code>).</summary>
+<summary>🔪 &nbsp;<kbd><b>killmyjobs</b></kbd> &nbsp;— Cancels your jobs; by default cancels <b>both</b> running and queued jobs.</summary>
 
 <br>
 
-Any extra arguments are passed straight through to `squeue`, so you can add your
-own filters and formatting (e.g. `myjobs -t RUNNING`).
-
-</details>
-
-<details>
-<summary><b><code>killmyjobs</code></b> — Cancels your jobs; by default cancels <b>both</b> running and queued jobs.</summary>
-
-<br>
+**Arguments**
 
 - `-g` — only cancel **running** jobs, leaving queued jobs in place.
 - `-n <nodelist>` — only cancel jobs on the given nodes (same format as
@@ -93,12 +121,16 @@ own filters and formatting (e.g. `myjobs -t RUNNING`).
 
 </details>
 
+---
 
-## Installation
+## 📦 Installation
+
 Open a terminal, and `cd` to `<PATH-ON-YOUR-CLUSTER>` then:
-```
+
+```bash
 git clone https://github.com/NanboLi/easy_cluster.git
 echo 'export PATH=<PATH-ON-YOUR-CLUSTER>/easy_cluster:$PATH' >> ~/.bashrc
 source ~/.bashrc
 ```
-You are ready to go!
+
+You are ready to go! 🎉
