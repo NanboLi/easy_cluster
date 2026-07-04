@@ -31,7 +31,10 @@ its full usage.
 | 🟢 | [`free-gpus`](free-gpus) | List nodes that currently have free GPUs. |
 | 🔪 | [`killmyjobs`](killmyjobs) | Cancel your jobs, with options to filter and exclude. |
 
-> 💡 Click a command below to unfold its arguments.
+
+
+
+> 💡 Click a command below to unfold its arguments. All these commands are tested working with `watch <cmd>` live monitoring: e.g. `watch myjobs --start`. 
 
 <br>
 
