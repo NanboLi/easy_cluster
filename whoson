@@ -1,0 +1,91 @@
+#!/bin/bash
+
+gpu=false
+
+print_usage () {
+  cat << EOM
+Usage: $0 [-g]
+    Get number of jobs running/pending on the cluster grouped by user.
+
+Arguments:
+    -g    (optional) Also count GPUs allocated/requested and nodes used, in addition to jobs running/pending
+
+Output:
+    For each user with queued/running jobs, prints a line showing the total number of jobs as well as a breakdown into
+    running and pending. With the -g flag, also shows the number of GPUs allocated/requested and the number of nodes used.
+
+EOM
+}
+
+while getopts ':g' flag; do
+  case "${flag}" in
+    g) gpu=true ;;
+    *) print_usage
+       exit ;;
+  esac
+done
+
+# Fields: username | state | numnodes | full TRES string (comma-separated key=val list).
+# The TRES string reports "gres/gpu=N" as the TOTAL GPUs for the whole job, already
+# summed across all nodes, regardless of how they were requested (--gpus, --gpus-per-node,
+# --gpus-per-task, --gres). This is more reliable than %b (tres-per-node), which is empty
+# for jobs that don't use per-node requests. numnodes has no internal spaces and the TRES
+# string has none either, so whitespace-splitting in awk keeps them in single fields.
+squeue -r --noheader -O "username:64,state:24,numnodes:16,tres:512" | sort | awk -v countgpus="${gpu}" '
+function gpus_of(tres,   s) {
+    # Match "gres/gpu=<N>" (total GPUs), not "gres/gpu:<type>=<N>" (per-type breakdown).
+    if (match(tres, /gres\/gpu=[0-9]+/)) {
+        s = substr(tres, RSTART, RLENGTH);
+        sub(/gres\/gpu=/, "", s);
+        return s + 0;
+    }
+    return 0;
+}
+function flush(id,   name) {
+    cmd = "getent passwd \"" id "\" | cut -d: -f5 | cut -d, -f1";
+    cmd | getline name;
+    close(cmd);
+    if (countgpus=="true")
+        printf "%s,%s,%s/%s/%s,%s/%s/%s,%s/%s/%s\n", id, name, \
+            running_jobs, pending_jobs, running_jobs+pending_jobs, \
+            running_nodes, pending_nodes, running_nodes+pending_nodes, \
+            running_gpus, pending_gpus, running_gpus+pending_gpus;
+    else
+        printf "%s,%s,%s/%s/%s\n", id, name, running_jobs, pending_jobs, running_jobs+pending_jobs;
+}
+function tally(state, gpucount, nnodes) {
+    if (state=="PENDING") {
+        pending_jobs  += 1;
+        pending_gpus  += gpucount;
+        pending_nodes += nnodes;
+    } else if (state=="RUNNING") {
+        running_jobs  += 1;
+        running_gpus  += gpucount;
+        running_nodes += nnodes;
+    }
+}
+function reset() {
+    running_jobs=0; pending_jobs=0;
+    running_gpus=0; pending_gpus=0;
+    running_nodes=0; pending_nodes=0;
+}
+BEGIN{
+    if (countgpus=="true")
+        printf "sid,name,jobs(running/pending/total),nodes(running/pending/total),GPUs(running/pending/total)\n";
+    else
+        printf "sid,name,jobs(running/pending/total)\n";
+    previd="";
+    reset();
+} {
+    gpucount = gpus_of($4);
+    nnodes   = $3 + 0;
+    if (NR==1) previd=$1;
+    if ($1!=previd) {
+        flush(previd);
+        reset();
+        previd=$1;
+    }
+    tally($2, gpucount, nnodes);
+}END{
+    if (NR>0) flush(previd);
+}' | column -s',' -t
